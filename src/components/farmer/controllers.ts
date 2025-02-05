@@ -9,7 +9,7 @@ class Controller {
     async create(req: Request, res: Response): Promise<any> {
 
         try {
-            const { email, phone, password, name, landDetails } = req.body;
+            const { email, phone, password, name } = req.body;
 
             if (!email) {
                 return res.status(400).json({
@@ -39,14 +39,6 @@ class Controller {
                 });
             }
 
-            if (!landDetails) {
-                return res.status(400).json({
-                    message: "Land details are required",
-                    data: null
-                });
-            }
-
-
             // check if the provided email or phone exists already
 
             const checkFarmer: IFarmer | null = await Farmer.findOne({
@@ -70,10 +62,10 @@ class Controller {
             newFarmer.email = email;
             newFarmer.password = await bcrypt.hash(password, parseInt(process.env.SALTROUNDS as string));
             newFarmer.phone = phone;
-            newFarmer.land = {
-                size: landDetails["size"],
-                location: landDetails["location"]
-            }
+            // newFarmer.land = {
+            //     size: landDetails["size"],
+            //     location: landDetails["location"]
+            // }
 
             await newFarmer.save();
 
@@ -122,10 +114,13 @@ class Controller {
                 { expiresIn: "1d" }
             );
 
+            const { password: pwd, ...data } = farmer.toObject();
+
 
             return res.status(200).json({
                 message: "Login successful",
-                token
+                token,
+                data
             });
 
 
@@ -133,6 +128,52 @@ class Controller {
             return res.status(500).json({ message: "Server error" });
         }
 
+    }
+
+    async updateFarmer(req: Request, res: Response): Promise<any> {
+        
+        try {
+
+            const { id: farmerId } = req.params;
+
+            const { name, landDetails } = req.body;
+
+            if (!farmerId) {
+                return res.status(400).json({ message: 'Farmer id is required' });
+            }
+
+            const farmer: IFarmer | null = await Farmer.findOne({ _id: farmerId });
+
+            if (!farmer) {
+                return res.status(404).json({ message: 'Farmer not found' });
+            }
+
+            if (name) {
+                farmer.name = name;
+            }
+
+
+            if (landDetails) {
+                farmer.land = {
+                    size: landDetails["size"],
+                    location: landDetails["location"],
+                    type: landDetails["type"]
+                }
+            }
+
+            await farmer.save();
+
+            const { password: pwd, ...data } = farmer.toObject();
+
+            return res.status(200).json({
+                message: "Farmer updated successfully.",
+                data
+            });
+
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({ message: "Server error" });
+        }
     }
 }
 

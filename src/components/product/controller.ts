@@ -6,7 +6,7 @@ class Controller {
     async create(req: Request, res: Response): Promise<any> {
 
         try {
-            const { name, type, stock } = req.body;
+            const { name, type, stock, landDetails, price } = req.body;
 
             if (!name) {
                 return res.status(400).json({ message: 'Name is required' });
@@ -21,11 +21,21 @@ class Controller {
                 return res.status(400).json({ message: 'Stock is required' });
             }
 
+            if (!landDetails) {
+                return res.status(400).json({ message: 'Land details is required' });
+            }
+
+            if (!price) {
+                return res.status(400).json({ message: 'Price is required' });
+            }
+
             const newProduct = new Product();
 
             newProduct.name = name;
             newProduct.type = type;
             newProduct.stock = parseInt(stock);
+            newProduct.price = price;
+            newProduct.landDetails = landDetails;
 
             await newProduct.save();
 
@@ -84,7 +94,7 @@ class Controller {
 
         try {
 
-            const { name, type } = req.body;
+            const { name, type, landDetails, price } = req.body;
 
             const product: IProduct | null = await Product.findById(req.params.id);
 
@@ -97,6 +107,9 @@ class Controller {
 
             product.name = name;
             product.type = type;
+            product.stock = parseInt(req.body.stock);
+            product.landDetails = landDetails;
+            product.price = price;
 
             await product.save();
 

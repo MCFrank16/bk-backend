@@ -9,7 +9,7 @@ interface IFarmer extends Document {
     land: {
         size: number, // in acres only
         location: string,
-
+        type: string
     };
 }
 
@@ -18,7 +18,7 @@ const FarmerSchema = new Schema({
     email: { type: String, required: true, unique: true },
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    land: { type: Object, required: true }
+    land: { type: Object, required: false, default: null }
 });
 
 const Farmer = mongoose.model<IFarmer>('Farmer', FarmerSchema);

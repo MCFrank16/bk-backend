@@ -12,7 +12,7 @@ router
 
 router
     .route("/login")
-    .get(
+    .post(
         controller.login.bind(controller),
     );
 

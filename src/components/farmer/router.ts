@@ -12,8 +12,14 @@ router
 
 router
     .route("/login")
-    .get(
+    .post(
         controller.login.bind(controller),
+    );
+
+router
+    .route("/update/:id")
+    .put(
+        controller.updateFarmer.bind(controller),
     );
 
 export default router;

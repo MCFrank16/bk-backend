@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import { Order, IOrder } from "./schema";
-import { trusted } from 'mongoose';
 
 class Controller {
 
@@ -9,16 +8,16 @@ class Controller {
             const { productId, quantity, farmerId } = req.body;
 
             if (!productId) {
-                return res.status(400).json({ message: 'Product id is required' });
+                return res.status(400).json({ message: 'Product id is required.' });
             }
 
             if (!quantity) {
-                return res.status(400).json({ message: 'Quantity is required' });
+                return res.status(400).json({ message: 'Quantity is required.' });
             }
 
 
             if (!farmerId) {
-                return res.status(400).json({ message: 'Farmer id is required' });
+                return res.status(400).json({ message: 'Farmer id is required.' });
             }
 
             const newOrder = new Order();
@@ -42,28 +41,28 @@ class Controller {
 
     async readAllOrders(req: Request, res: Response): Promise<any> {
         try {
-            const { type } = req.params;
-            const { farmerId } = req.body;
+            const { id } = req.query;
 
             let orders: IOrder[] = [];
 
-            if (type == 'farmers') {
-                if (!farmerId) {
-                    return res.status(400).json({ message: 'Farmer id is required' });
-                }
-
-                orders = await Order.find({ farmer: farmerId });
+            if (id) {
+                orders = await Order.find({ farmer: id })
+                    .populate('product')
+                    .populate('farmer');
             }
 
 
-            if (type == 'all') {
-                orders = await Order.find();
+            if (!id) {
+                orders = await Order.find()
+                    .populate('product')
+                    .populate('farmer');
             }
 
             return res.status(200).json({
+                message: "Orders retrieved successfully.",
                 data: orders
             });
-        } catch(error){
+        } catch (error) {
             console.log(error)
             return res.status(500).json({ message: "Server error" });
         }
@@ -71,18 +70,19 @@ class Controller {
 
     async readSingleOrder(req: Request, res: Response): Promise<any> {
         try {
-            const { orderId } = req.body;
+            const { id } = req.body;
 
-            if (!orderId) {
+            if (!id) {
                 return res.status(400).json({ message: 'Order id is required' });
             }
 
-            const order: IOrder | null = await Order.findOne({ id: orderId });
+            const order: IOrder | null = await Order.findOne({ id });
 
             return res.status(200).json({
+                message: "Order retrieved successfully.",
                 data: order
             });
-        } catch(error){
+        } catch (error) {
             console.log(error)
             return res.status(500).json({ message: "Server error" });
         }
@@ -91,9 +91,11 @@ class Controller {
     async updateOrder(req: Request, res: Response): Promise<any> {
         try {
 
-            const { orderId, status, quantity } = req.body;
+            const { id } = req.params;
 
-            if (!orderId) {
+            const { status, quantity } = req.body;
+
+            if (!id) {
                 return res.status(400).json({ message: 'Order id is required' });
             }
 
@@ -105,26 +107,27 @@ class Controller {
                 return res.status(400).json({ message: 'Quantity is required' });
             }
 
-            const order: IOrder | null = await Order.findOne({ id: orderId });
+            const order: IOrder | null = await Order.findOne({ _id: id });
 
             if (!order) {
                 return res.status(404).json({ message: 'Order not found' });
             }
-            
+
             order.quantity = quantity;
             order.status = status;
 
             await order.save();
 
             return res.status(200).json({
+                message: "Order updated successfully.",
                 data: order
             });
-            
+
         } catch (error) {
             console.log(error)
             return res.status(500).json({ message: "Server error" });
         }
-    }   
+    }
 
     async deleteOrder(req: Request, res: Response): Promise<any> {
         try {
@@ -143,7 +146,7 @@ class Controller {
             await order.deleteOne();
 
             return res.status(200).json({
-                message: 'Order deleted successfully'
+                message: 'Order deleted successfully.'
             });
         } catch (error) {
             console.log(error)
