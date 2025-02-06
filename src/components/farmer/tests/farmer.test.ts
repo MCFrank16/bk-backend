@@ -4,21 +4,27 @@ import bodyParser from 'body-parser';
 import Controller from '../controllers';
 import { Farmer } from '../schema';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app: Application = express();
 app.use(bodyParser.json());
 
 const controller = new Controller();
 app.post('/farmer/create', controller.create.bind(controller));
-app.get('/farmer/login', controller.login.bind(controller));
+app.post('/farmer/login', controller.login.bind(controller));
+app.put('/farmer/update/:id', controller.updateFarmer.bind(controller));
 
 jest.mock('../schema');
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
-import jwt from 'jsonwebtoken';
 
-describe('Admin Controller', () => {
-    describe('POST /admin/create', () => {
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+describe('Farmer Controller', () => {
+    describe('POST /farmer/create', () => {
 
         it('should create a new farmer successfully', async () => {
             (Farmer.findOne as jest.Mock).mockResolvedValue(null);
@@ -46,22 +52,26 @@ describe('Admin Controller', () => {
         });
     });
 
-    describe('GET /admin/login', () => {
+    describe('POST /farmer/login', () => {
 
         it('should login a farmer successfully', async () => {
-            (Farmer.findOne as jest.Mock).mockResolvedValue({
-                username: 'adminUser@gmail.com',
+
+            const mockUser = {
+                email: 'farmer@gmail.com',
+                phone: '2345345345',
                 password: 'hashedpassword',
-            });
+            };
+
+            (Farmer.findOne as jest.Mock).mockResolvedValue(mockUser);
             (bcrypt.compare as jest.Mock).mockResolvedValue(true);
             (jwt.sign as jest.Mock).mockReturnValue('fake-jwt-token');
 
             const response = await request(app)
-                .get('/farmer/login')
-                .query({ username: 'adminUser@gmail.com', password: 'password' });
+                .post('/farmer/login')
+                .send({ username: 'farmer@gmail.com' , password: 'hashedpassword' });
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Login successful');
+            expect(response.body.message).toBe('Login successfull');
             expect(response.body.token).toBe('fake-jwt-token');
         });
 
@@ -69,8 +79,8 @@ describe('Admin Controller', () => {
         it('should return 404 if farmer is not found', async () => {
             (Farmer.findOne as jest.Mock).mockResolvedValue(null);
             const response = await request(app)
-                .get('/farmer/login')
-                .query({ username: 'adminUser@gmail.com', password: 'password' });
+                .post('/farmer/login')
+                .send({ username: 'adminUser@gmail.com', password: 'password' });
 
             expect(response.status).toBe(404);
         });
@@ -79,11 +89,37 @@ describe('Admin Controller', () => {
             (Farmer.findOne as jest.Mock).mockRejectedValue(new Error('Server error'));
 
             const response = await request(app)
-                .get('/farmer/login')
-                .query({ username: 'adminUser@gmail.com', password: 'password' });
+                .post('/farmer/login')
+                .send({ username: 'adminUser@gmail.com', password: 'password' });
 
             expect(response.status).toBe(500);
             expect(response.body.message).toBe('Server error');
         });
     });
+
+    describe('UPDATE /farmer/update/:id', () => {
+        it('should update a farmer successfully', async () => {
+
+            const mockUser = {
+                id: 1,
+                email: 'farmer@gmail.com',
+                phone: '2345345345',
+                password: 'hashedpassword',
+                name: 'Old Name',
+                save: jest.fn().mockResolvedValue(true), // Mock save method in the controller
+            };
+
+            (Farmer.findOne as jest.Mock).mockResolvedValue(mockUser);
+            (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+            const response = await request(app)
+                .put('/farmer/update/1')
+                .send({ name: 'Frank' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.message).toBe('Farmer updated successfully.');
+        });
+
+
+    })
 });

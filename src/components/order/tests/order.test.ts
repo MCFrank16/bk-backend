@@ -28,9 +28,8 @@ describe('Order Controller', () => {
                 quantity: 2,
             });
 
-            console.log(response.body);
-
         expect(response.status).toBe(201);
+        expect(response.body.message).toBe('Order is created successfully.');
     });
 
 });

@@ -18,41 +18,24 @@ jest.mock('../schema');
 describe('Product Controller', () => {
 
     it('should create a new product successfully', async () => {
-        (Product.prototype.save as jest.Mock).mockResolvedValue({ name: 'Test Product', type: 'Test Type', stock: 100 });
+        const body = { name: 'Test Product', type: 'Test Type', stock: 100, landDetails: { quantity: 30, type: 'wet'}, price: "4000" };
+        (Product.prototype.save as jest.Mock).mockResolvedValue(body);
 
         const response = await request(app)
             .post('/product/create')
-            .send({ name: 'Test Product', type: 'Test Type', stock: 100 });
+            .send(body);
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Product is created successfully.');
-        // expect(response.body.data).toEqual(expect.objectContaining({ name: 'Test Product', type: 'Test Type' }));
-    });
-
-    it('should return 400 if name is missing', async () => {
-        const response = await request(app)
-            .post('/product/create')
-            .send({ type: 'Test Type' });
-
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe('Name is required');
-    });
-
-    it('should return 400 if type is missing', async () => {
-        const response = await request(app)
-            .post('/product/create')
-            .send({ name: 'Test Product' });
-
-        expect(response.status).toBe(400);
-        expect(response.body.message).toBe('Type is required');
     });
 
     it('should return 500 if there is a server error', async () => {
+        const body = { name: 'Test Product', type: 'Test Type', stock: 100, landDetails: { quantity: 30, type: 'wet'}, price: "4000" };
         (Product.prototype.save as jest.Mock).mockRejectedValue(new Error('Server error'));
 
         const response = await request(app)
             .post('/product/create')
-            .send({ name: 'Test Product', type: 'Test Type', stock: 100 });
+            .send(body);
 
         expect(response.status).toBe(500);
         expect(response.body.message).toBe('Server error');

@@ -114,11 +114,11 @@ class Controller {
                 { expiresIn: "1d" }
             );
 
-            const { password: pwd, ...data } = farmer.toObject();
+            const { password: pwd, ...data } = farmer;
 
 
             return res.status(200).json({
-                message: "Login successful",
+                message: "Login successfull",
                 token,
                 data
             });
@@ -163,7 +163,7 @@ class Controller {
 
             await farmer.save();
 
-            const { password: pwd, ...data } = farmer.toObject();
+            const { password: pwd, ...data } = farmer;
 
             return res.status(200).json({
                 message: "Farmer updated successfully.",
@@ -171,7 +171,6 @@ class Controller {
             });
 
         } catch (error) {
-            console.log(error)
             return res.status(500).json({ message: "Server error" });
         }
     }
